@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        APP_NAME = 'et-web-app'
+        APP_NAME = 'java-spring-app'
         JAR_NAME = 'target/my-app.jar'
         DEV_SERVER = 'dev.project-training.in'
         QA_SERVER  = 'qa.project-training.in'
@@ -51,7 +51,7 @@ pipeline {
                 withSonarQubeEnv('SONAR_SITE') { // Must match name in Jenkins config
                     sh """
                     mvn sonar:sonar \
-                      -Dsonar.projectKey=login-app \
+                      -Dsonar.projectKey=java-spring-app \
                       -Dsonar.host.url=${env.SONAR_HOST_URL} \
                       -Dsonar.login=${env.SONAR_TOKEN}
                     """
