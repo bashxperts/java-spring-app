@@ -77,7 +77,7 @@ pipeline {
 
 					echo "Jira ticket status: ${status}"
 
-					if (status != 'Approved') {
+					if (status != 'Done') {
 						error "Deployment blocked. Jira ticket is not in 'Approved' state."
 					}
 				}
