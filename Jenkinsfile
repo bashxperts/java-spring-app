@@ -14,6 +14,8 @@ pipeline {
         PROD_SERVER = 'web.project-training.in'
         JIRA_SITE = 'ET_JIRA_SITE' // Configure this in Jenkins Jira Settings
         JIRA_CREDENTIALS_ID = 'ET_JIRA_TOKEN' // Create in Jenkins Credentials
+        SONAR_HOST_URL = 'https://sonarcloud.io/'
+        SONAR_TOKEN = credentials('ET_SONAR_TOKEN')  // Securely inject token
     }
 
     stages {
@@ -46,8 +48,14 @@ pipeline {
                 }
             }
             steps {
-                echo "Running SonarQube scan for ${params.ENV}..."
-                sh 'mvn sonar:sonar'
+                withSonarQubeEnv('SONAR_SITE') { // Must match name in Jenkins config
+                    sh """
+                    mvn sonar:sonar \
+                      -Dsonar.projectKey=login-app \
+                      -Dsonar.host.url=${env.SONAR_HOST_URL} \
+                      -Dsonar.login=${env.SONAR_TOKEN}
+                    """
+                }
             }
         }
 
