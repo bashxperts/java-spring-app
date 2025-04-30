@@ -61,21 +61,29 @@ pipeline {
             }
         }
 
-        stage('Approval') {
-            when { expression { params.ENV == 'prod' } }
-            steps {
-                script {
-                    if (!params.JIRA_TICKET?.trim()) {
-                        error "JIRA_TICKET is required for PROD deployments!"
-                    }
+		stage('Approval') {
+			when {
+				expression { params.ENV == 'prod' }
+			}
+			steps {
+				script {
+					def response = jiraGetIssue idOrKey: params.JIRA_TICKET
+					if (!response.successful) {
+						error "Failed to fetch Jira issue: ${params.JIRA_TICKET}"
+					}
 
-                    def issue = jiraGetIssue idOrKey: params.JIRA_TICKET, site: env.JIRA_SITE
-                    echo "Current JIRA status: ${issue.fields.status.name}"
+					def issue = response.data
+					def status = issue.fields.status.name
 
-                    input message: "Approve PROD deployment for ticket ${params.JIRA_TICKET} (Status: ${issue.fields.status.name})?", ok: "Deploy"
-                }
-            }
-        }
+					echo "Jira ticket status: ${status}"
+
+					if (status != 'Approved') {
+						error "Deployment blocked. Jira ticket is not in 'Approved' state."
+					}
+				}
+			}
+		}
+
 
         stage('Deploy') {
             steps {
