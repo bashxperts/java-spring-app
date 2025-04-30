@@ -85,27 +85,37 @@ pipeline {
 		}
 
 
-        stage('Deploy') {
-            steps {
-                script {
-                    def targetServer = ''
-                    switch (params.ENV) {
-                        case 'dev': targetServer = env.DEV_SERVER; break
-                        case 'qa':  targetServer = env.QA_SERVER; break
-                        case 'prod': targetServer = env.PROD_SERVER; break
-                    }
+		stage('Deploy') {
+			steps {
+				script {
+					def functionName = ""
+					if (params.ENV == 'dev') {
+						functionName = "java-app-dev"
+					} else if (params.ENV == 'qa') {
+						functionName = "java-app-qa"
+					} else if (params.ENV == 'prod') {
+						functionName = "java-app-prod"
+					}
 
-                    echo "Deploying ${env.JAR_NAME} to ${params.ENV} server: ${targetServer}..."
+					echo "Deploying to Lambda function: ${functionName}"
 
-                    // Replace with actual deploy logic for your platform
-                    sh """
-                    scp ${env.JAR_NAME} user@${targetServer}:/app/${env.APP_NAME}.jar
-                    ssh user@${targetServer} 'systemctl restart ${env.APP_NAME}'
-                    """
-                }
-            }
-        }
-    }
+					withCredentials([[
+						$class: 'AmazonWebServicesCredentialsBinding',
+						credentialsId: 'AWS_ADMIN' 
+					]]) {
+						sh """
+							zip -j lambda.zip target/*.jar
+							aws lambda update-function-code \
+								--function-name ${functionName} \
+								--zip-file fileb://lambda.zip \
+								--region us-east-1
+						"""
+					}
+
+					echo "Deployment to ${functionName} completed."
+				}
+			}
+		}
 
     post {
         success {
