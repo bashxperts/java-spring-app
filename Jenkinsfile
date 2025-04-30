@@ -16,6 +16,7 @@ pipeline {
         JIRA_CREDENTIALS_ID = 'ET_JIRA_TOKEN' // Create in Jenkins Credentials
         SONAR_HOST_URL = 'https://sonarcloud.io/'
         SONAR_TOKEN = credentials('ET_SONAR_TOKEN')  // Securely inject token
+        SONAR_ORG = 'bashxperts'
     }
 
     stages {
@@ -51,7 +52,8 @@ pipeline {
                 withSonarQubeEnv('SONAR_SITE') { // Must match name in Jenkins config
                     sh """
                     mvn sonar:sonar \
-                      -Dsonar.projectKey=java-spring-app \
+                      -Dsonar.projectKey=${env.APP_NAME} \
+                      -Dsonar.organization=${env.SONAR_ORG} \
                       -Dsonar.host.url=${env.SONAR_HOST_URL} \
                       -Dsonar.login=${env.SONAR_TOKEN}
                     """
