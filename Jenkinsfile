@@ -12,17 +12,29 @@ pipeline {
         DEV_SERVER = 'dev.project-training.in'
         QA_SERVER  = 'qa.project-training.in'
         PROD_SERVER = 'web.project-training.in'
-        JIRA_SITE = 'MyJira' // Configure this in Jenkins Jira Settings
-        JIRA_CREDENTIALS_ID = 'ET-JIRA' // Create in Jenkins Credentials
+        JIRA_SITE = 'ET_JIRA_SITE' // Configure this in Jenkins Jira Settings
+        JIRA_CREDENTIALS_ID = 'ET_JIRA_TOKEN' // Create in Jenkins Credentials
     }
 
     stages {
-
+        stage('Checkout from GitHub') {
+            steps {
+                echo "Checking out source code from GitHub..."
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/bashxperts/java-spring-app.git',
+                        credentialsId: env.GIT_CREDS
+                    ]]
+                ])
+            }
+        }
         stage('Build') {
             when { expression { params.ENV == 'dev' } }
             steps {
                 echo "Building application with Maven for DEV..."
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn clean package'
             }
         }
 
